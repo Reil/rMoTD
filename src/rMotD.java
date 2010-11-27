@@ -12,7 +12,7 @@ public class rMotD extends Plugin {
 	public void enable(){
 		Messages = new PropertiesFile("rMotD.properties");
 		log.info("[rMotD] Loaded!");
-		// etc.getInstance().addCommand("/newmessage", "Nicer formatted table of warps.");
+		// etc.getInstance().addCommand("/newmessage", "Adds new message and stuff");
 	}
 	public void disable(){
 		Messages.save();
@@ -22,8 +22,12 @@ public class rMotD extends Plugin {
 		ArrayList <Player> sentTo = new ArrayList<Player>();
 		for (Player messageMe: etc.getServer().getPlayerList()){
 			boolean flag = false;
-			for(String amIHere : sendToGroups) 
-				if (messageMe.isInGroup(amIHere)) flag = true;
+			for(String amIHere : sendToGroups) {
+				if (messageMe.isInGroup(amIHere)){
+					flag = true;
+					break;
+				}
+			}
 			if (flag == true) {
 				messageMe.sendMessage(message);
 				sentTo.add(messageMe);
@@ -36,11 +40,13 @@ public class rMotD extends Plugin {
 		public void onLogin(Player triggerMessage){
 			String [] groupArray = triggerMessage.getGroups();
 			for (String groupName : groupArray){
-				String sendToGroups_Message = Messages.getString(groupName,":");
-				String [] Split =  sendToGroups_Message.split(":");
-				String [] sendToGroups = Split[0].split(",");
-				String message = Split[1];
-				sendToGroups(sendToGroups, message);
+				if (Messages.keyExists(groupName)){
+					String sendToGroups_Message = Messages.getString(groupName,":");
+					String [] Split =  sendToGroups_Message.split(":");
+					String [] sendToGroups = Split[0].split(",");
+					String message = Split[1];
+					sendToGroups(sendToGroups, message);
+				}
 			}
 		}
 	}
