@@ -60,7 +60,7 @@ public class rMotD extends Plugin {
 					String sendToGroups_Message = Messages.getString(groupName);
 					String [] Split =  sendToGroups_Message.split(":");
 					String [] sendToGroups = Split[0].split(",");
-					String message = Split[1];
+					String message = Split[2];
 					sendToGroups(sendToGroups, message);
 				}
 			}

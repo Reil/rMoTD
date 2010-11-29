@@ -68,7 +68,7 @@ public class rPropertiesFile {
         reader = new BufferedReader(new FileReader(fileName));
         String line;
         while ((line = reader.readLine()) != null) {
-        	
+        	line = line + "";
         }
 		
 	}
