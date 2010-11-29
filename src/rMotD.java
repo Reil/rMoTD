@@ -13,6 +13,7 @@ public class rMotD extends Plugin {
 	
 	public void initialize(){
 		etc.getLoader().addListener(PluginLoader.Hook.LOGIN, listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.COMMAND, listener, this, PluginListener.Priority.MEDIUM);
 	}
 	public void enable(){
 		try {
@@ -21,10 +22,12 @@ public class rMotD extends Plugin {
 			log.log(Level.SEVERE, "[rMotD]: Exception while loading properties file.", e);
 		}
 		
+		etc.getInstance().addCommand("/grouptell", "Tell members of a group something.");
 		log.info("[rMotD] Loaded!");
 	}
 	public void disable(){
 		/* Messages.save(); */
+		etc.getInstance().removeCommand("/grouptell");
 		log.info("[rMotD] Disabled!");
 	} 
 	
@@ -73,6 +76,10 @@ public class rMotD extends Plugin {
 					}
 				}
 			}
+		}
+		
+		public boolean onCommand(Player player, String[] split){
+			return true;
 		}
 	}
 }
