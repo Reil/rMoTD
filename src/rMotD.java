@@ -59,9 +59,13 @@ public class rMotD extends Plugin {
 				if (Messages.keyExists(groupName)){
 					String sendToGroups_Message = Messages.getString(groupName);
 					String [] Split =  sendToGroups_Message.split(":");
-					String [] sendToGroups = Split[0].split(",");
 					String message = Split[2];
-					sendToGroups(sendToGroups, message);
+					if (Split[0].isEmpty())
+						triggerMessage.sendMessage(message);
+					else {
+						String [] sendToGroups = Split[0].split(",");
+						sendToGroups(sendToGroups, message);
+					}
 				}
 			}
 		}
