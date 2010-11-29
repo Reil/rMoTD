@@ -22,14 +22,13 @@ public class rMotD extends Plugin {
 		}
 		
 		log.info("[rMotD] Loaded!");
-		// etc.getInstance().addCommand("/newmessage", "Adds new message and stuff");
 	}
 	public void disable(){
 		/* Messages.save(); */
 		log.info("[rMotD] Disabled!");
 	} 
 	
-	/* Sends a the message string to each group named in sendToGroups */
+	/* Sends the message string to each group named in sendToGroups */
 	public void sendToGroups (String [] sendToGroups, String message) {
 		String prompt = "Sending \"" + message + "\" to: ";
 		for (String Group:sendToGroups)
@@ -51,8 +50,14 @@ public class rMotD extends Plugin {
 		}
 		return;
 	}
-	 
+	
 	public class rMotDListener extends PluginListener {
+		/* Checks for any messages that the player's group memberships may trigger.
+		 * Parses the message line into:
+		 *  - groups to send it to (or just the player)
+		 *  - options
+		 *  - and the message.
+		 * Sends the message on its merry way using sendToGroups.*/
 		public void onLogin(Player triggerMessage){
 			String [] groupArray = triggerMessage.getGroups();
 			for (String groupName : groupArray){
