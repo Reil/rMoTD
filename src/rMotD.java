@@ -22,6 +22,10 @@ public class rMotD extends Plugin {
 			log.log(Level.SEVERE, "[rMotD]: Exception while loading properties file.", e);
 		}
 		
+		/* TODO (Efficiency): Go through each command, see if any commands actually need these listeners. */
+		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT, listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.BAN       , listener, this, PluginListener.Priority.MEDIUM);
+		
 		etc.getInstance().addCommand("/grouptell", "Tell members of a group something.");
 		log.info("[rMotD] Loaded!");
 	}
@@ -32,9 +36,9 @@ public class rMotD extends Plugin {
 	} 
 	
 	public String parseMessage(String message, String [] replace, String[] with){
-		String parsed = new String();
+		String parsed = message;
 		for(int i = 0; i < replace.length; i++)
-			parsed = message.replaceAll(replace[i], with[i]);
+			parsed = parsed.replaceAll(replace[i], with[i]);
 		return parsed;
 	}
 	
@@ -50,6 +54,9 @@ public class rMotD extends Plugin {
 				}
 			}
 			if (flag == true) {
+				String [] replace = {"<<recipient>>"};
+				String [] with    = {messageMe.getName()};
+				parseMessage(message, replace, with);
 				messageMe.sendMessage(message);
 				sentTo.add(messageMe);
 			}
@@ -72,42 +79,14 @@ public class rMotD extends Plugin {
 		 *  - and the message.
 		 * Sends the message on its merry way using sendToGroups.*/
 		public void onLogin(Player triggerMessage){
-			String [] groupArray = triggerMessage.getGroups();
-			for (String groupName : groupArray){
-				if (Messages.keyExists(groupName)){
-					String sendToGroups_Message = Messages.getString(groupName);
-					String [] split =  sendToGroups_Message.split(":");
-					String [] options =  split[1].split(",");
-					boolean hookValid = false;
-					if (split[1].isEmpty()){
-						hookValid = true;
-					} else for (int i = 0; i <options.length && hookValid == false; i++){
-						if(options[i].equalsIgnoreCase("onlogin")) hookValid = true;
-					}
-					if (hookValid) {
-						String message = split[2];
-						/* Linebreaks! */
-						String[] replace = new String[1];
-						String[] with = new String[1];
-						replace[0] = "@"; with[0] = ("\n");
-						parseMessage(message, replace, with);
-	
-						sendMessage(message, triggerMessage, split[0]);
-					}
-				}
-			}
+			triggerMessagesWithOption(triggerMessage, "onlogin");
+			return;
+		}
+		public void onDisconnect(Player triggerMessage){
+			triggerMessagesWithOption(triggerMessage, "ondisconnect");
+			return;
 		}
 		
-		public void sendMessage(String message, Player triggerMessage, String Groups){
-			/* Send to player, or send to groups */
-			if (Groups.isEmpty()) {
-				triggerMessage.sendMessage(message);
-			}
-			else {
-				String [] sendToGroups = Groups.split(",");
-				sendToGroups(sendToGroups, message);
-			}
-		}
 		
 		public boolean onCommand(Player player, String[] split){
 			if (!player.canUseCommand(split[0]))
@@ -125,6 +104,46 @@ public class rMotD extends Plugin {
 	        	return true;
 	        }
 			return false; 
+		}
+		
+		
+		public void triggerMessagesWithOption(Player triggerMessage, String option){
+			String [] groupArray = triggerMessage.getGroups();
+			for (String groupName : groupArray){
+				if (Messages.keyExists(groupName)){
+					String sendToGroups_Message = Messages.getString(groupName);
+					String [] split =  sendToGroups_Message.split(":");
+					String [] options =  split[1].split(",");
+					boolean hookValid = false;
+					if (split[1].isEmpty() && option.equalsIgnoreCase("onlogin")){
+						hookValid = true;
+					} else for (int i = 0; i <options.length && hookValid == false; i++){
+						if(options[i].equalsIgnoreCase(option)) hookValid = true;
+					}
+					if (hookValid) {
+						String message = split[2];
+						String [] replace = {"@"	, "<<triggerer>>"};
+						String [] with    = {"\n"	, triggerMessage.getName()};
+						parseMessage(message, replace, with);
+						/* TODO: Make some special case for "all" option. */
+						sendMessage(message, triggerMessage, split[0]);
+					}
+				}
+			}
+		}
+		public void sendMessage(String message, Player triggerMessage, String Groups){
+			/* Default: Send to player
+			 * If groups are specified, send to those instead. */
+			if (Groups.isEmpty()) {
+				String [] replace = {"<<recipient>>"};
+				String [] with    = {triggerMessage.getName()};
+				parseMessage(message, replace, with);
+				triggerMessage.sendMessage(message);
+			}
+			else {
+				String [] sendToGroups = Groups.split(",");
+				sendToGroups(sendToGroups, message);
+			}
 		}
 	}
 }
