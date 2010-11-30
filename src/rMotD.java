@@ -31,6 +31,13 @@ public class rMotD extends Plugin {
 		log.info("[rMotD] Disabled!");
 	} 
 	
+	public String parseMessage(String message, String [] replace, String[] with){
+		String parsed = new String();
+		for(int i = 0; i < replace.length; i++)
+			parsed = message.replaceAll(replace[i], with[i]);
+		return parsed;
+	}
+	
 	/* Sends the message string to each group named in sendToGroups */
 	public void sendToGroups (String [] sendToGroups, String message) {
 		String prompt = "Sending \"" + message + "\" to: ";
@@ -51,6 +58,13 @@ public class rMotD extends Plugin {
 				sentTo.add(messageMe);
 			}
 		}
+		return;
+	}
+	
+	public void sendToGroup(String sendToGroup, String message) {
+		String [] arrayOfOne = new String[1];
+		arrayOfOne[0] = sendToGroup;
+		sendToGroups(arrayOfOne, message);
 		return;
 	}
 	
@@ -79,7 +93,21 @@ public class rMotD extends Plugin {
 		}
 		
 		public boolean onCommand(Player player, String[] split){
-			return true;
+			if (!player.canUseCommand(split[0]))
+	            return false;
+	        
+	        if (split[0].equalsIgnoreCase("/grouptell")){
+	        	Group iShouldExist;
+	        	if ((iShouldExist = etc.getDataSource().getGroup(split[1])) != null) {
+		        	String tag =  "<" + player.getColor() + player.getName() + Colors.White + " to §" + iShouldExist.Prefix.charAt(0) + iShouldExist.Name + Colors.White + "> ";
+		        	String message = tag + etc.combineSplit(2, split, " ");
+		        	sendToGroup(split[1], message);
+	        	} else {
+	        		player.sendMessage(Colors.Red + "Invalid group name!");
+	        	}
+	        	return true;
+	        }
+			return false; 
 		}
 	}
 }
