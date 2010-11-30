@@ -40,10 +40,6 @@ public class rMotD extends Plugin {
 	
 	/* Sends the message string to each group named in sendToGroups */
 	public void sendToGroups (String [] sendToGroups, String message) {
-		String prompt = "Sending \"" + message + "\" to: ";
-		for (String Group:sendToGroups)
-			prompt = prompt + " " + Group;
-		
 		ArrayList <Player> sentTo = new ArrayList<Player>();
 		for (Player messageMe: etc.getServer().getPlayerList()){
 			boolean flag = false;
@@ -80,15 +76,36 @@ public class rMotD extends Plugin {
 			for (String groupName : groupArray){
 				if (Messages.keyExists(groupName)){
 					String sendToGroups_Message = Messages.getString(groupName);
-					String [] Split =  sendToGroups_Message.split(":");
-					String message = Split[2];
-					if (Split[0].isEmpty())
-						triggerMessage.sendMessage(message);
-					else {
-						String [] sendToGroups = Split[0].split(",");
-						sendToGroups(sendToGroups, message);
+					String [] split =  sendToGroups_Message.split(":");
+					String [] options =  split[1].split(",");
+					boolean hookValid = false;
+					if (split[1].isEmpty()){
+						hookValid = true;
+					} else for (int i = 0; i <options.length && hookValid == false; i++){
+						if(options[i].equalsIgnoreCase("onlogin")) hookValid = true;
+					}
+					if (hookValid) {
+						String message = split[2];
+						/* Linebreaks! */
+						String[] replace = new String[1];
+						String[] with = new String[1];
+						replace[0] = "@"; with[0] = ("\n");
+						parseMessage(message, replace, with);
+	
+						sendMessage(message, triggerMessage, split[0]);
 					}
 				}
+			}
+		}
+		
+		public void sendMessage(String message, Player triggerMessage, String Groups){
+			/* Send to player, or send to groups */
+			if (Groups.isEmpty()) {
+				triggerMessage.sendMessage(message);
+			}
+			else {
+				String [] sendToGroups = Groups.split(",");
+				sendToGroups(sendToGroups, message);
 			}
 		}
 		
