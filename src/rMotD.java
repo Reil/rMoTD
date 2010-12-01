@@ -23,6 +23,8 @@ public class rMotD extends Plugin {
 		}
 		
 		/* TODO (Efficiency): Go through each command, see if any commands actually need these listeners. */
+		// Regex: ^([A-Za-z0-9,]+):([A-Za-z0-9,]*:([A-Za-z0-9,]*disconnect([A-Za-z0-9,]*)
+		//   
 		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT, listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.BAN       , listener, this, PluginListener.Priority.MEDIUM);
 		
@@ -35,10 +37,63 @@ public class rMotD extends Plugin {
 		log.info("[rMotD] Disabled!");
 	} 
 	
+	public void sendToGroup(String sendToGroup, String message) {
+		String [] arrayOfOne = new String[1];
+		arrayOfOne[0] = sendToGroup;
+		sendToGroups(arrayOfOne, message);
+		return;
+	}
+	
+	/* Looks through all of the messages,
+	 * Sends the messages triggered by groups which 'triggerMessage' is a member of,
+	 * But only if that message has the contents of 'option' as one of its options */
+	public void triggerMessagesWithOption(Player triggerMessage, String option){
+		String [] groupArray = triggerMessage.getGroups();
+		for (String groupName : groupArray){
+			if (Messages.keyExists(groupName)){
+				String sendToGroups_Message = Messages.getString(groupName);
+				String [] split =  sendToGroups_Message.split(":");
+				String [] options =  split[1].split(",");
+				boolean hookValid = false;
+				if (split[1].isEmpty() && option.equalsIgnoreCase("onlogin")){
+					hookValid = true;
+				} else for (int i = 0; i <options.length && hookValid == false; i++){
+					if(options[i].equalsIgnoreCase(option)) hookValid = true;
+				}
+				if (hookValid) {
+					String message = split[2];
+					String [] replace = {"@"	, "<<triggerer>>"};
+					String [] with    = {"\n"	, triggerMessage.getName()};
+					message = parseMessage(message, replace, with);
+					/* TODO: Make some special case for "all" option. */
+					sendMessage(message, triggerMessage, split[0]);
+				}
+			}
+		}
+	}
+	
+	
+	public void sendMessage(String message, Player triggerMessage, String Groups){
+		/* Default: Send to player unless groups are specified.
+		 * If so, send to those instead. */
+		if (Groups.isEmpty()) {
+			String [] replace = {"<<recipient>>"};
+			String [] with    = {triggerMessage.getName()};
+			message = parseMessage(message, replace, with);
+			for(String send : message.split("\n"))
+				triggerMessage.sendMessage(send);
+		}
+		else {
+			String [] sendToGroups = Groups.split(",");
+			sendToGroups(sendToGroups, message);
+		}
+	}
+	
 	public String parseMessage(String message, String [] replace, String[] with){
 		String parsed = message;
-		for(int i = 0; i < replace.length; i++)
+		for(int i = 0; i < replace.length; i++) {
 			parsed = parsed.replaceAll(replace[i], with[i]);
+		}
 		return parsed;
 	}
 	
@@ -56,20 +111,15 @@ public class rMotD extends Plugin {
 			if (flag == true) {
 				String [] replace = {"<<recipient>>"};
 				String [] with    = {messageMe.getName()};
-				parseMessage(message, replace, with);
-				messageMe.sendMessage(message);
+				message = parseMessage(message, replace, with);
+				for(String send : message.split("\n"))
+					messageMe.sendMessage(send);
 				sentTo.add(messageMe);
 			}
 		}
 		return;
 	}
 	
-	public void sendToGroup(String sendToGroup, String message) {
-		String [] arrayOfOne = new String[1];
-		arrayOfOne[0] = sendToGroup;
-		sendToGroups(arrayOfOne, message);
-		return;
-	}
 	
 	public class rMotDListener extends PluginListener {
 		/* Checks for any messages that the player's group memberships may trigger.
@@ -103,47 +153,9 @@ public class rMotD extends Plugin {
 	        	}
 	        	return true;
 	        }
+	        
+	        
 			return false; 
-		}
-		
-		
-		public void triggerMessagesWithOption(Player triggerMessage, String option){
-			String [] groupArray = triggerMessage.getGroups();
-			for (String groupName : groupArray){
-				if (Messages.keyExists(groupName)){
-					String sendToGroups_Message = Messages.getString(groupName);
-					String [] split =  sendToGroups_Message.split(":");
-					String [] options =  split[1].split(",");
-					boolean hookValid = false;
-					if (split[1].isEmpty() && option.equalsIgnoreCase("onlogin")){
-						hookValid = true;
-					} else for (int i = 0; i <options.length && hookValid == false; i++){
-						if(options[i].equalsIgnoreCase(option)) hookValid = true;
-					}
-					if (hookValid) {
-						String message = split[2];
-						String [] replace = {"@"	, "<<triggerer>>"};
-						String [] with    = {"\n"	, triggerMessage.getName()};
-						parseMessage(message, replace, with);
-						/* TODO: Make some special case for "all" option. */
-						sendMessage(message, triggerMessage, split[0]);
-					}
-				}
-			}
-		}
-		public void sendMessage(String message, Player triggerMessage, String Groups){
-			/* Default: Send to player
-			 * If groups are specified, send to those instead. */
-			if (Groups.isEmpty()) {
-				String [] replace = {"<<recipient>>"};
-				String [] with    = {triggerMessage.getName()};
-				parseMessage(message, replace, with);
-				triggerMessage.sendMessage(message);
-			}
-			else {
-				String [] sendToGroups = Groups.split(",");
-				sendToGroups(sendToGroups, message);
-			}
 		}
 	}
 }
