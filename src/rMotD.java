@@ -4,9 +4,9 @@ import java.util.logging.Logger;
 
 public class rMotD extends Plugin {
 	public PropertiesFile Messages;
-	String defaultGroup = etc.getDataSource().getDefaultGroup().Name; 
 	PluginListener listener = new rMotDListener();
 	Logger log = Logger.getLogger("Minecraft");
+	String defaultGroup;
 	
 	public rMotD () {
 		Messages = new PropertiesFile("rMotD.properties");
@@ -15,6 +15,7 @@ public class rMotD extends Plugin {
 	public void initialize(){
 		etc.getLoader().addListener(PluginLoader.Hook.LOGIN  , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.COMMAND, listener, this, PluginListener.Priority.MEDIUM);
+		defaultGroup = etc.getDataSource().getDefaultGroup().Name;
 	}
 	public void enable(){
 		try {
