@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 public class rMotD extends Plugin {
 	public PropertiesFile Messages;
+	String defaultGroup = etc.getDataSource().getDefaultGroup().Name; 
 	PluginListener listener = new rMotDListener();
 	Logger log = Logger.getLogger("Minecraft");
 	
@@ -12,7 +13,7 @@ public class rMotD extends Plugin {
 	}
 	
 	public void initialize(){
-		etc.getLoader().addListener(PluginLoader.Hook.LOGIN, listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.LOGIN  , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.COMMAND, listener, this, PluginListener.Priority.MEDIUM);
 	}
 	public void enable(){
@@ -48,7 +49,17 @@ public class rMotD extends Plugin {
 	 * Sends the messages triggered by groups which 'triggerMessage' is a member of,
 	 * But only if that message has the contents of 'option' as one of its options */
 	public void triggerMessagesWithOption(Player triggerMessage, String option){
-		String [] groupArray = triggerMessage.getGroups();
+		String[] eventToReplace = new String[0];
+		String[] eventReplaceWith = new String[0];
+		triggerMessagesWithOption(triggerMessage, option, eventToReplace, eventReplaceWith);
+	}
+	public void triggerMessagesWithOption(Player triggerMessage, String option, String[] eventToReplace, String[] eventReplaceWith){
+		String [] groupArray;
+		if (triggerMessage.hasNoGroups()){
+			groupArray = new String[]{defaultGroup};
+		} else {
+			groupArray = triggerMessage.getGroups();
+		}
 		for (String groupName : groupArray){
 			if (Messages.keyExists(groupName)){
 				String sendToGroups_Message = Messages.getString(groupName);
@@ -62,8 +73,8 @@ public class rMotD extends Plugin {
 				}
 				if (hookValid) {
 					String message = split[2];
-					String [] replace = {"@"	, "<<triggerer>>"};
-					String [] with    = {"\n"	, triggerMessage.getName()};
+					String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>"};
+					String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP()};
 					message = parseMessage(message, replace, with);
 					/* TODO: Make some special case for "all" option. */
 					sendMessage(message, triggerMessage, split[0]);
@@ -77,8 +88,8 @@ public class rMotD extends Plugin {
 		/* Default: Send to player unless groups are specified.
 		 * If so, send to those instead. */
 		if (Groups.isEmpty()) {
-			String [] replace = {"<<recipient>>"};
-			String [] with    = {triggerMessage.getName()};
+			String [] replace = {"<<recipient>>"         , "<<recipient-ip>>"};
+			String [] with    = {triggerMessage.getName(), triggerMessage.getIP()};
 			message = parseMessage(message, replace, with);
 			for(String send : message.split("\n"))
 				triggerMessage.sendMessage(send);
@@ -103,14 +114,14 @@ public class rMotD extends Plugin {
 		for (Player messageMe: etc.getServer().getPlayerList()){
 			boolean flag = false;
 			for(String amIHere : sendToGroups) {
-				if (messageMe.isInGroup(amIHere)){
+				if (messageMe.isInGroup(amIHere) || (messageMe.hasNoGroups() && amIHere == defaultGroup)){
 					flag = true;
 					break;
 				}
 			}
 			if (flag == true) {
-				String [] replace = {"<<recipient>>"};
-				String [] with    = {messageMe.getName()};
+				String [] replace = {"<<recipient>>"    , "<<recipient-ip>>"};
+				String [] with    = {messageMe.getName(), messageMe.getIP()};
 				message = parseMessage(message, replace, with);
 				for(String send : message.split("\n"))
 					messageMe.sendMessage(send);
@@ -135,6 +146,12 @@ public class rMotD extends Plugin {
 		public void onDisconnect(Player triggerMessage){
 			triggerMessagesWithOption(triggerMessage, "ondisconnect");
 			return;
+		}
+		
+		public void onBan(Player mod, Player triggerMessage, java.lang.String reason) {
+			String [] replaceThese = {"<<ban-reason>>", "<<ban-setter>>", "<<ban-recipient>>"     };
+			String [] withThese =    {reason          , mod.getName()   , triggerMessage.getName()};
+			triggerMessagesWithOption(triggerMessage, "onban", replaceThese, withThese);
 		}
 		
 		
