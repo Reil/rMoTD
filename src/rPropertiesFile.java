@@ -28,7 +28,11 @@ public class rPropertiesFile {
                 log.severe("[PropertiesFile] Unable to load " + fileName + "!");
             }
         } else {
-            save();
+            try {
+            	file.createNewFile();
+            } catch (IOException ex) {
+            	log.severe("[rPropertiesFile] Unable to create file " + fileName + "!");
+            }
         }
     }
 	
@@ -72,8 +76,7 @@ public class rPropertiesFile {
 		if (Properties.containsKey(key)) {
 			ArrayList <String> rt = Properties.get(key);
 			return rt.toArray(new String[rt.size()]);
-		} else
-		return null;
+		} else return null;
 	}
 	
 	boolean	keyExists(java.lang.String key) {

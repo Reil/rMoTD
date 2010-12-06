@@ -3,13 +3,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class rMotD extends Plugin {
-	public PropertiesFile Messages;
+	public rPropertiesFile Messages;
 	PluginListener listener = new rMotDListener();
 	Logger log = Logger.getLogger("Minecraft");
 	String defaultGroup;
 	
 	public rMotD () {
-		Messages = new PropertiesFile("rMotD.properties");
+		Messages = new rPropertiesFile("rMotD.properties");
 	}
 	
 	public void initialize(){
@@ -64,26 +64,27 @@ public class rMotD extends Plugin {
 		}
 		for (String groupName : groupArray){
 			if (Messages.keyExists(groupName)){
-				String sendToGroups_Message = Messages.getString(groupName);
-				String [] split =  sendToGroups_Message.split(":");
-				String [] options =  split[1].split(",");
-				boolean hookValid = false;
-				if (split[1].isEmpty() && option.equalsIgnoreCase("onlogin")){
-					hookValid = true;
-				} else for (int i = 0; i <options.length && hookValid == false; i++){
-					if(options[i].equalsIgnoreCase(option)) hookValid = true;
-				}
-				if (hookValid) {
-					String message = etc.combineSplit(2, split, ":");
-					String playerList = new String();
-					for (Player getName : etc.getServer().getPlayerList()){
-						playerList = getName.getName() + ", " + playerList;
+				for (String sendToGroups_Message : Messages.getStrings(groupName)){
+					String [] split =  sendToGroups_Message.split(":");
+					String [] options =  split[1].split(",");
+					boolean hookValid = false;
+					if (split[1].isEmpty() && option.equalsIgnoreCase("onlogin")){
+						hookValid = true;
+					} else for (int i = 0; i <options.length && hookValid == false; i++){
+						if(options[i].equalsIgnoreCase(option)) hookValid = true;
 					}
-					String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>",     "<<player-list>>"};
-					String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(), playerList};					
-					message = parseMessage(message, replace, with);
-					/* TODO: Make some special case for "all" option. */
-					sendMessage(message, triggerMessage, split[0]);
+					if (hookValid) {
+						String message = etc.combineSplit(2, split, ":");
+						String playerList = new String();
+						for (Player getName : etc.getServer().getPlayerList()){
+							playerList = getName.getName() + ", " + playerList;
+						}
+						String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>",     "<<player-list>>"};
+						String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(), playerList};					
+						message = parseMessage(message, replace, with);
+						/* TODO: Make some special case for "all" option. */
+						sendMessage(message, triggerMessage, split[0]);
+					}
 				}
 			}
 		}
