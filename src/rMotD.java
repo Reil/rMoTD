@@ -179,21 +179,6 @@ public class rMotD extends Plugin {
 		 * Sends the message on its merry way using sendToGroups.*/
 		public void onLogin(Player triggerMessage){
 			triggerMessagesWithOption(triggerMessage, "onlogin");
-			/* Checking duplicate logins. */
-			/* int numDupes = -1;
-			String triggerName = triggerMessage.getName();
-			List<Player> playerList = etc.getServer().getPlayerList();
-			for( Player checkDupe : playerList){
-				if ( checkDupe.getName() == triggerName) {
-					numDupes++;
-					triggerMessage = checkDupe;
-				}
-			}
-			if (numDupes > 0){
-				String [] replaceThese = {"<<numdupes>>"};
-				String [] withThese = {Integer.toString(numDupes)};
-				triggerMessagesWithOption(triggerMessage, "onlogin-duplicate", replaceThese, withThese);
-			}*/
 			return;
 		}
 		
@@ -207,24 +192,6 @@ public class rMotD extends Plugin {
 			String [] withThese =    {reason          , mod.getName()   , triggerMessage.getName()};
 			triggerMessagesWithOption(triggerMessage, "onban", replaceThese, withThese);
 		}
-		/*
-		public String onLoginChecks (String triggerName){
-			// Checking duplicate logins. 
-			int numDupes = 0;
-			List<Player> playerList = etc.getServer().getPlayerList();
-			Player triggerMessage = null;
-			for( Player checkDupe : playerList){
-				if ( checkDupe.getName() == triggerName) {
-					numDupes++;
-					triggerMessage = checkDupe;
-				}
-			}
-			if (numDupes > 0){
-				triggerMessagesWithOption(triggerMessage, "onlogin-duplicate");
-			}
-			return null;
-		}*/
-		
 		
 		public boolean onCommand(Player player, String[] split){
 			if (!player.canUseCommand(split[0]))

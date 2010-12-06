@@ -50,14 +50,34 @@ public class rPropertiesFile {
 	long getLong(java.lang.String key, long value){
 		return 0;
 	}
-	java.lang.String getString(java.lang.String key) {
-		return "Hey0!";
+	
+	String getString(java.lang.String key) {
+		ArrayList<String> arrayList = Properties.get(key);
+		return arrayList.get(0);
 	}
-	java.lang.String getString(java.lang.String key, java.lang.String value) {
-		return "Hey0!";
+	
+	String getString(java.lang.String key, java.lang.String value) {
+		if (Properties.containsKey(key)){
+			ArrayList<String> arrayList = Properties.get(key);
+			return arrayList.get(0);
+		}
+		else {
+			setString(key, value); 
+		}
+		return value;
 	}
+	
+	
+	String [] getStrings(String key) {
+		if (Properties.containsKey(key)) {
+			ArrayList <String> rt = Properties.get(key);
+			return rt.toArray(new String[rt.size()]);
+		} else
+		return null;
+	}
+	
 	boolean	keyExists(java.lang.String key) {
-		return true;
+		return Properties.containsKey(key);
 	}
 	void load() throws IOException {
 		/* Go through, line by line. 
@@ -68,7 +88,24 @@ public class rPropertiesFile {
         reader = new BufferedReader(new FileReader(fileName));
         String line;
         while ((line = reader.readLine()) != null) {
-        	line = line + "";
+        	if (line.startsWith("#"))
+        		continue;
+        	else {
+        		/* TODO: Error checking */
+        		String [] split = line.split("=");
+        		String PropertySide = split[1];
+        		String Value = etc.combineSplit(1, split, "=");
+        		for (String Property : PropertySide.split(",")) {
+	        		if (Properties.containsKey(Property)){
+	        			Properties.get(Property).add(Value);
+	        		}
+	        		else {
+	        			ArrayList<String> newList = new ArrayList<String>();
+	        			newList.add(Value);
+	        			Properties.put(Property, newList);
+	        		}
+        		}
+        	}
         }
 		
 	}
