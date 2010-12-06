@@ -27,8 +27,9 @@ public class rMotD extends Plugin {
 		/* TODO (Efficiency): Go through each command, see if any commands actually need these listeners. */
 		// Regex: ^([A-Za-z0-9,]+):([A-Za-z0-9,]*:([A-Za-z0-9,]*disconnect([A-Za-z0-9,]*)
 		//   
-		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT, listener, this, PluginListener.Priority.MEDIUM);
-		etc.getLoader().addListener(PluginLoader.Hook.BAN       , listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT , listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.BAN        , listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.LOGINCHECK , listener, this, PluginListener.Priority.MEDIUM);
 		
 		etc.getInstance().addCommand("/grouptell", "Tell members of a group something.");
 		log.info("[rMotD] Loaded!");
@@ -97,7 +98,7 @@ public class rMotD extends Plugin {
 		}
 		else {
 			String [] sendToGroups = Groups.split(",");
-			sendToGroups(sendToGroups, message);
+			sendToGroups(sendToGroups, message, triggerMessage);
 		}
 	}
 	
@@ -108,7 +109,39 @@ public class rMotD extends Plugin {
 		}
 		return parsed;
 	}
-	
+	public void sendToGroups (String [] sendToGroups, String message, Player triggerer) {
+		ArrayList <String> sendToGroupsFiltered = new ArrayList<String>();
+		boolean everyone = false;
+		for (String group : sendToGroups){
+			if (group.equalsIgnoreCase("<<triggerer>>")) {
+				String [] replace = {"<<recipient>>"    , "<<recipient-ip>>"};
+				String [] with    = {triggerer.getName(), triggerer.getIP()};
+				message = parseMessage(message, replace, with);
+				for(String send : message.split("\n"))
+					triggerer.sendMessage(send);
+			} else if (group.equalsIgnoreCase("<<server>>")) {
+				String [] replace = {"<<recipient>>"};
+				String [] with    = {"server"};
+				message = "[rMotD] " + parseMessage(message, replace, with);
+				for(String send : message.split("\n"))
+					log.info(send);
+			} else if (group.equalsIgnoreCase("<<everyone>>")){
+				for (Player messageMe : etc.getServer().getPlayerList()){
+					String [] replace = {"<<recipient>>"    , "<<recipient-ip>>"};
+					String [] with    = {messageMe.getName(), messageMe.getIP()};
+					message = parseMessage(message, replace, with);
+					for(String send : message.split("\n"))
+						messageMe.sendMessage(send);
+				}
+				everyone = true;
+			} else {
+				sendToGroupsFiltered.add(group);
+			}
+		}
+		if (!everyone) {
+			sendToGroups(sendToGroupsFiltered.toArray(new String[sendToGroupsFiltered.size()]), message);
+		}
+	}
 	/* Sends the message string to each group named in sendToGroups */
 	public void sendToGroups (String [] sendToGroups, String message) {
 		ArrayList <Player> sentTo = new ArrayList<Player>();
@@ -142,8 +175,24 @@ public class rMotD extends Plugin {
 		 * Sends the message on its merry way using sendToGroups.*/
 		public void onLogin(Player triggerMessage){
 			triggerMessagesWithOption(triggerMessage, "onlogin");
+			/* Checking duplicate logins. */
+			/* int numDupes = -1;
+			String triggerName = triggerMessage.getName();
+			List<Player> playerList = etc.getServer().getPlayerList();
+			for( Player checkDupe : playerList){
+				if ( checkDupe.getName() == triggerName) {
+					numDupes++;
+					triggerMessage = checkDupe;
+				}
+			}
+			if (numDupes > 0){
+				String [] replaceThese = {"<<numdupes>>"};
+				String [] withThese = {Integer.toString(numDupes)};
+				triggerMessagesWithOption(triggerMessage, "onlogin-duplicate", replaceThese, withThese);
+			}*/
 			return;
 		}
+		
 		public void onDisconnect(Player triggerMessage){
 			triggerMessagesWithOption(triggerMessage, "ondisconnect");
 			return;
@@ -154,6 +203,23 @@ public class rMotD extends Plugin {
 			String [] withThese =    {reason          , mod.getName()   , triggerMessage.getName()};
 			triggerMessagesWithOption(triggerMessage, "onban", replaceThese, withThese);
 		}
+		/*
+		public String onLoginChecks (String triggerName){
+			// Checking duplicate logins. 
+			int numDupes = 0;
+			List<Player> playerList = etc.getServer().getPlayerList();
+			Player triggerMessage = null;
+			for( Player checkDupe : playerList){
+				if ( checkDupe.getName() == triggerName) {
+					numDupes++;
+					triggerMessage = checkDupe;
+				}
+			}
+			if (numDupes > 0){
+				triggerMessagesWithOption(triggerMessage, "onlogin-duplicate");
+			}
+			return null;
+		}*/
 		
 		
 		public boolean onCommand(Player player, String[] split){
