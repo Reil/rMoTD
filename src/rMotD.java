@@ -74,9 +74,13 @@ public class rMotD extends Plugin {
 					if(options[i].equalsIgnoreCase(option)) hookValid = true;
 				}
 				if (hookValid) {
-					String message = split[2];
-					String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>"};
-					String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP()};
+					String message = etc.combineSplit(2, split, ":");
+					String playerList = new String();
+					for (Player getName : etc.getServer().getPlayerList()){
+						playerList = getName.getName() + ", " + playerList;
+					}
+					String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>",     "<<player-list>>"};
+					String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(), playerList};					
 					message = parseMessage(message, replace, with);
 					/* TODO: Make some special case for "all" option. */
 					sendMessage(message, triggerMessage, split[0]);
