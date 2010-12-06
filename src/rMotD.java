@@ -79,8 +79,8 @@ public class rMotD extends Plugin {
 					for (Player getName : etc.getServer().getPlayerList()){
 						playerList = getName.getName() + ", " + playerList;
 					}
-					String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>",     "<<player-list>>"};
-					String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(), playerList};					
+					String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>"    , "triggerer-color"       , "<<player-list>>"};
+					String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(),triggerMessage.getColor(), playerList};					
 					message = parseMessage(message, replace, with);
 					/* TODO: Make some special case for "all" option. */
 					sendMessage(message, triggerMessage, split[0]);
@@ -94,8 +94,8 @@ public class rMotD extends Plugin {
 		/* Default: Send to player unless groups are specified.
 		 * If so, send to those instead. */
 		if (Groups.isEmpty()) {
-			String [] replace = {"<<recipient>>"         , "<<recipient-ip>>"};
-			String [] with    = {triggerMessage.getName(), triggerMessage.getIP()};
+			String [] replace = {"<<recipient>>"         , "<<recipient-ip>>"    , "<<recipient-color>>"};
+			String [] with    = {triggerMessage.getName(), triggerMessage.getIP(), triggerMessage.getColor()};
 			message = parseMessage(message, replace, with);
 			for(String send : message.split("\n"))
 				triggerMessage.sendMessage(send);
@@ -118,8 +118,8 @@ public class rMotD extends Plugin {
 		boolean everyone = false;
 		for (String group : sendToGroups){
 			if (group.equalsIgnoreCase("<<triggerer>>")) {
-				String [] replace = {"<<recipient>>"    , "<<recipient-ip>>"};
-				String [] with    = {triggerer.getName(), triggerer.getIP()};
+				String [] replace = {"<<recipient>>"    , "<<recipient-ip>>", "<<recipient-color>>"};
+				String [] with    = {triggerer.getName(), triggerer.getIP() , triggerer.getColor()};
 				message = parseMessage(message, replace, with);
 				for(String send : message.split("\n"))
 					triggerer.sendMessage(send);
@@ -131,8 +131,8 @@ public class rMotD extends Plugin {
 					log.info(send);
 			} else if (group.equalsIgnoreCase("<<everyone>>")){
 				for (Player messageMe : etc.getServer().getPlayerList()){
-					String [] replace = {"<<recipient>>"    , "<<recipient-ip>>"};
-					String [] with    = {messageMe.getName(), messageMe.getIP()};
+					String [] replace = {"<<recipient>>"    , "<<recipient-ip>>", "<<recipient-color>>"};
+					String [] with    = {messageMe.getName(), messageMe.getIP() , messageMe.getColor()};
 					message = parseMessage(message, replace, with);
 					for(String send : message.split("\n"))
 						messageMe.sendMessage(send);
@@ -158,8 +158,8 @@ public class rMotD extends Plugin {
 				}
 			}
 			if (flag == true) {
-				String [] replace = {"<<recipient>>"    , "<<recipient-ip>>"};
-				String [] with    = {messageMe.getName(), messageMe.getIP()};
+				String [] replace = {"<<recipient>>"    , "<<recipient-ip>>", "<<recipient-color>>"};
+				String [] with    = {messageMe.getName(), messageMe.getIP() , messageMe.getColor()};
 				message = parseMessage(message, replace, with);
 				for(String send : message.split("\n"))
 					messageMe.sendMessage(send);
