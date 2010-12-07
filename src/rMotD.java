@@ -79,20 +79,12 @@ public class rMotD extends Plugin {
 						for (Player getName : etc.getServer().getPlayerList()){
 							playerList = getName.getName() + ", " + playerList;
 						}
-						String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>",     "<<player-list>>"};
-						String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(), playerList};					
-						message = parseMessage(message, replace, with);
-						/* TODO: Make some special case for "all" option. */
-						sendMessage(message, triggerMessage, split[0]);
-					}
-<<<<<<< HEAD
 						String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>"    , "triggerer-color"       , "<<player-list>>"};
 						String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(),triggerMessage.getColor(), playerList};					
 						message = parseMessage(message, replace, with);
 						/* TODO: Make some special case for "all" option. */
 						sendMessage(message, triggerMessage, split[0]);
-=======
->>>>>>> newProperties
+					}
 				}
 			}
 		}
