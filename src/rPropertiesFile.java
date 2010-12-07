@@ -7,8 +7,7 @@ import java.util.Hashtable;
 import java.util.logging.Logger;
 
 public class rPropertiesFile {
-	Hashtable<String,ArrayList<String>> Properties = new Hashtable<String,ArrayList<String>>();
-	ArrayList<String> orders; 
+	Hashtable<String,ArrayList<String>> Properties = new Hashtable<String,ArrayList<String>>(); 
 	String fileName;
 	Logger log = Logger.getLogger("Minecraft");
 
@@ -86,17 +85,18 @@ public class rPropertiesFile {
 		/* Go through, line by line. 
 		 * If the line starts with # or !, then save the line in list
 		 * If the line has an assignment, put the name here. */
-		orders.clear();
+		Properties.clear();
 		BufferedReader reader;
         reader = new BufferedReader(new FileReader(fileName));
         String line;
         while ((line = reader.readLine()) != null) {
-        	if (line.startsWith("#"))
-        		continue;
+        	if (line.startsWith("#")) {
+        		
+        	}
         	else {
         		/* TODO: Error checking */
         		String [] split = line.split("=");
-        		String PropertySide = split[1];
+        		String PropertySide = split[0];
         		String Value = etc.combineSplit(1, split, "=");
         		for (String Property : PropertySide.split(",")) {
 	        		if (Properties.containsKey(Property)){
