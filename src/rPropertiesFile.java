@@ -78,6 +78,18 @@ public class rPropertiesFile {
 		} else return null;
 	}
 	
+	String [] getStrings(String [] keys){
+		ArrayList <String> returnMe = new ArrayList<String>();
+		for (String key : keys) {
+			if (Properties.containsKey(key)) {
+				ArrayList <String> rt = Properties.get(key);
+				returnMe.addAll(rt);
+			}
+		}
+		String[] returnArray = new String[returnMe.size()];
+		return returnMe.toArray(returnArray);
+	}
+	
 	boolean	keyExists(java.lang.String key) {
 		return Properties.containsKey(key);
 	}

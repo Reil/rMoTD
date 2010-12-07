@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,12 +58,13 @@ public class rMotD extends Plugin {
 		triggerMessagesWithOption(triggerMessage, option, eventToReplace, eventReplaceWith);
 	}
 	public void triggerMessagesWithOption(Player triggerMessage, String option, String[] eventToReplace, String[] eventReplaceWith){
-		String [] groupArray;
+		ArrayList<String>groupArray = new ArrayList<String>();
 		if (triggerMessage.hasNoGroups()){
-			groupArray = new String[]{defaultGroup};
+			groupArray.add(defaultGroup);
 		} else {
-			groupArray = triggerMessage.getGroups();
+			groupArray.addAll(Arrays.asList(triggerMessage.getGroups()));
 		}
+		groupArray.add("<<everyone>>");
 		for (String groupName : groupArray){
 			if (Messages.keyExists(groupName)){
 				for (String sendToGroups_Message : Messages.getStrings(groupName)){
@@ -76,8 +79,13 @@ public class rMotD extends Plugin {
 					if (hookValid) {
 						String message = etc.combineSplit(2, split, ":");
 						String playerList = new String();
-						for (Player getName : etc.getServer().getPlayerList()){
-							playerList = getName.getName() + ", " + playerList;
+						List<Player> players = etc.getServer().getPlayerList();
+						if (players.size() == 1)
+							playerList = players.get(0).getName();
+						else {
+							for (Player getName : players){
+								playerList = getName.getName() + ", " + playerList;
+							}
 						}
 						String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>"    , "triggerer-color"       , "<<player-list>>"};
 						String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(),triggerMessage.getColor(), playerList};					
