@@ -9,6 +9,7 @@ public class rMotD extends Plugin {
 	PluginListener listener = new rMotDListener();
 	Logger log = Logger.getLogger("Minecraft");
 	String defaultGroup;
+	String versionNumber = "1.2"; 
 	public iData data;
 	
 	public rMotD () {
@@ -37,10 +38,9 @@ public class rMotD extends Plugin {
 		etc.getLoader().addListener(PluginLoader.Hook.LOGINCHECK , listener, this, PluginListener.Priority.MEDIUM);
 		
 		etc.getInstance().addCommand("/grouptell", "Tell members of a group something.");
-		log.info("[rMotD] Loaded!");
+		log.info("[rMotD] Loaded: Version " + versionNumber);
 	}
 	public void disable(){
-		/* Messages.save(); */
 		Messages.save();
 		etc.getInstance().removeCommand("/grouptell");
 		log.info("[rMotD] Disabled!");
