@@ -23,7 +23,7 @@ public class rMotD extends Plugin {
 		if (iData.iExist()){
 			data = new iData();
 		}
-	}
+	} 
 	public void enable(){
 		try {
 			Messages.load();
