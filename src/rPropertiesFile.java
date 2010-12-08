@@ -10,6 +10,7 @@ public class rPropertiesFile {
 	Hashtable<String,ArrayList<String>> Properties = new Hashtable<String,ArrayList<String>>(); 
 	String fileName;
 	Logger log = Logger.getLogger("Minecraft");
+	File file;
 
 	/**
      * Creates or opens a properties file using specified filename
@@ -18,7 +19,7 @@ public class rPropertiesFile {
      */
     public rPropertiesFile(String fileName) {
         this.fileName = fileName;
-        File file = new File(fileName);
+        file = new File(fileName);
 
         if (file.exists()) {
             try {
@@ -122,7 +123,7 @@ public class rPropertiesFile {
         		}
         	}
         }
-		
+        reader.close();
 	}
 	void save(){
 		

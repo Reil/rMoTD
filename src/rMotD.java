@@ -9,6 +9,7 @@ public class rMotD extends Plugin {
 	PluginListener listener = new rMotDListener();
 	Logger log = Logger.getLogger("Minecraft");
 	String defaultGroup;
+	public iData data;
 	
 	public rMotD () {
 		Messages = new rPropertiesFile("rMotD.properties");
@@ -18,6 +19,9 @@ public class rMotD extends Plugin {
 		etc.getLoader().addListener(PluginLoader.Hook.LOGIN  , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.COMMAND, listener, this, PluginListener.Priority.MEDIUM);
 		defaultGroup = etc.getDataSource().getDefaultGroup().Name;
+		if (iData.iExist()){
+			data = new iData();
+		}
 	}
 	public void enable(){
 		try {
@@ -26,9 +30,8 @@ public class rMotD extends Plugin {
 			log.log(Level.SEVERE, "[rMotD]: Exception while loading properties file.", e);
 		}
 		
-		/* TODO (Efficiency): Go through each command, see if any commands actually need these listeners. */
+		/* TODO (Efficiency): Go through each message, see if any messages actually need these listeners. */
 		// Regex: ^([A-Za-z0-9,]+):([A-Za-z0-9,]*:([A-Za-z0-9,]*disconnect([A-Za-z0-9,]*)
-		//   
 		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.BAN        , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.LOGINCHECK , listener, this, PluginListener.Priority.MEDIUM);
@@ -38,6 +41,7 @@ public class rMotD extends Plugin {
 	}
 	public void disable(){
 		/* Messages.save(); */
+		Messages.save();
 		etc.getInstance().removeCommand("/grouptell");
 		log.info("[rMotD] Disabled!");
 	} 
@@ -57,13 +61,26 @@ public class rMotD extends Plugin {
 		String[] eventReplaceWith = new String[0];
 		triggerMessagesWithOption(triggerMessage, option, eventToReplace, eventReplaceWith);
 	}
+	
 	public void triggerMessagesWithOption(Player triggerMessage, String option, String[] eventToReplace, String[] eventReplaceWith){
 		ArrayList<String>groupArray = new ArrayList<String>();
+		/* Obtain group list */
 		if (triggerMessage.hasNoGroups()){
 			groupArray.add(defaultGroup);
 		} else {
 			groupArray.addAll(Arrays.asList(triggerMessage.getGroups()));
 		}
+		/* Obtain player list */
+		String playerList = new String();
+		List<Player> players = etc.getServer().getPlayerList();
+		if (players.size() == 1)
+			playerList = players.get(0).getName();
+		else {
+			for (Player getName : players){
+				playerList = getName.getName() + ", " + playerList;
+			}
+		}
+		
 		groupArray.add("<<everyone>>");
 		for (String groupName : groupArray){
 			if (Messages.keyExists(groupName)){
@@ -76,21 +93,22 @@ public class rMotD extends Plugin {
 					} else for (int i = 0; i <options.length && hookValid == false; i++){
 						if(options[i].equalsIgnoreCase(option)) hookValid = true;
 					}
+					
 					if (hookValid) {
 						String message = etc.combineSplit(2, split, ":");
-						String playerList = new String();
-						List<Player> players = etc.getServer().getPlayerList();
-						if (players.size() == 1)
-							playerList = players.get(0).getName();
-						else {
-							for (Player getName : players){
-								playerList = getName.getName() + ", " + playerList;
-							}
+						
+						/* Tag replacement: First round (triggerer) go! */
+						int balance = 0;
+						if (data != null){
+							balance = data.getBalance(triggerMessage.getName());
 						}
-						String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>"    , "triggerer-color"       , "<<player-list>>"};
-						String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(),triggerMessage.getColor(), playerList};					
+						String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>"    , "<<triggerer-color>>"   , "<<triggerer-balance>>"  , "<<player-list>>"};
+						String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(),triggerMessage.getColor(), Integer.toString(balance), playerList};					
 						message = parseMessage(message, replace, with);
-						/* TODO: Make some special case for "all" option. */
+						if (eventToReplace.length > 0)
+							message = parseMessage(message, eventToReplace, eventReplaceWith);
+						/* Tag replacement end! */
+						
 						sendMessage(message, triggerMessage, split[0]);
 					}
 				}
@@ -103,61 +121,45 @@ public class rMotD extends Plugin {
 		/* Default: Send to player unless groups are specified.
 		 * If so, send to those instead. */
 		if (Groups.isEmpty()) {
-			String [] replace = {"<<recipient>>"         , "<<recipient-ip>>"    , "<<recipient-color>>"};
-			String [] with    = {triggerMessage.getName(), triggerMessage.getIP(), triggerMessage.getColor()};
-			message = parseMessage(message, replace, with);
-			for(String send : message.split("\n"))
-				triggerMessage.sendMessage(send);
+			sendToPlayer(message, triggerMessage);
 		}
 		else {
 			String [] sendToGroups = Groups.split(",");
 			sendToGroups(sendToGroups, message, triggerMessage);
 		}
 	}
-	
-	public String parseMessage(String message, String [] replace, String[] with){
-		String parsed = message;
-		for(int i = 0; i < replace.length; i++) {
-			parsed = parsed.replaceAll(replace[i], with[i]);
-		}
-		return parsed;
-	}
+
+	/* Wrapper for older sendToGroups.
+	 * Takes care of 'psuedo-groups' like <<triggerer>>, <<server>>, and <<everyone>>,
+	 * then hands the rest off to the original, two-argument sendToGroups */
 	public void sendToGroups (String [] sendToGroups, String message, Player triggerer) {
 		ArrayList <String> sendToGroupsFiltered = new ArrayList<String>();
 		boolean everyone = false;
 		for (String group : sendToGroups){
 			if (group.equalsIgnoreCase("<<triggerer>>")) {
-				String [] replace = {"<<recipient>>"    , "<<recipient-ip>>", "<<recipient-color>>"};
-				String [] with    = {triggerer.getName(), triggerer.getIP() , triggerer.getColor()};
-				message = parseMessage(message, replace, with);
-				for(String send : message.split("\n"))
-					triggerer.sendMessage(send);
+				sendToPlayer(message, triggerer);
 			} else if (group.equalsIgnoreCase("<<server>>")) {
-				String [] replace = {"<<recipient>>"};
-				String [] with    = {"server"};
+				String [] replace = {"<<recipient>>", "<<recipient-ip>>", "<<recipient-color>>", "<<recipient-balance>>"};
+				String [] with    = {"server", "", "", ""};
 				message = "[rMotD] " + parseMessage(message, replace, with);
 				for(String send : message.split("\n"))
 					log.info(send);
 			} else if (group.equalsIgnoreCase("<<everyone>>")){
 				for (Player messageMe : etc.getServer().getPlayerList()){
-					String [] replace = {"<<recipient>>"    , "<<recipient-ip>>", "<<recipient-color>>"};
-					String [] with    = {messageMe.getName(), messageMe.getIP() , messageMe.getColor()};
-					message = parseMessage(message, replace, with);
-					for(String send : message.split("\n"))
-						messageMe.sendMessage(send);
+					sendToPlayer(message, messageMe);
 				}
 				everyone = true;
 			} else {
 				sendToGroupsFiltered.add(group);
 			}
 		}
-		if (!everyone) {
+		if (!everyone && !sendToGroupsFiltered.isEmpty()) {
 			sendToGroups(sendToGroupsFiltered.toArray(new String[sendToGroupsFiltered.size()]), message);
 		}
 	}
+
 	/* Sends the message string to each group named in sendToGroups */
 	public void sendToGroups (String [] sendToGroups, String message) {
-		ArrayList <Player> sentTo = new ArrayList<Player>();
 		for (Player messageMe: etc.getServer().getPlayerList()){
 			boolean flag = false;
 			for(String amIHere : sendToGroups) {
@@ -167,15 +169,31 @@ public class rMotD extends Plugin {
 				}
 			}
 			if (flag == true) {
-				String [] replace = {"<<recipient>>"    , "<<recipient-ip>>", "<<recipient-color>>"};
-				String [] with    = {messageMe.getName(), messageMe.getIP() , messageMe.getColor()};
-				message = parseMessage(message, replace, with);
-				for(String send : message.split("\n"))
-					messageMe.sendMessage(send);
-				sentTo.add(messageMe);
+				sendToPlayer(message, messageMe);
 			}
 		}
 		return;
+	}
+	
+	public void sendToPlayer(String message, Player recipient) {
+		int balance = 0;
+		if (data != null){
+			balance = data.getBalance(recipient.getName());
+		}
+		String [] replace = {"<<recipient>>"    , "<<recipient-ip>>" , "<<recipient-color>>", "<<recipient-balance>>"};
+		String [] with    = {recipient.getName(), recipient.getIP()  , recipient.getColor() , Integer.toString(balance)};
+		message = parseMessage(message, replace, with);
+		/* Tag replacement end. */
+		for(String send : message.split("\n"))
+			recipient.sendMessage(send);
+	}
+	
+	public String parseMessage(String message, String [] replace, String[] with){
+		String parsed = message;
+		for(int i = 0; i < replace.length; i++) {
+			parsed = parsed.replaceAll(replace[i], with[i]);
+		}
+		return parsed;
 	}
 	
 	
