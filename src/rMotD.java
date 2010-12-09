@@ -8,6 +8,7 @@ public class rMotD extends Plugin {
 	public rPropertiesFile Messages;
 	PluginListener listener = new rMotDListener();
 	Logger log = Logger.getLogger("Minecraft");
+	Server MCServer =etc.getServer();
 	String defaultGroup;
 	String versionNumber = "1.2"; 
 	public iData data;
@@ -72,7 +73,7 @@ public class rMotD extends Plugin {
 		}
 		/* Obtain player list */
 		String playerList = new String();
-		List<Player> players = etc.getServer().getPlayerList();
+		List<Player> players = MCServer.getPlayerList();
 		if (players.size() == 1)
 			playerList = players.get(0).getName();
 		else {
@@ -129,51 +130,68 @@ public class rMotD extends Plugin {
 		}
 	}
 
-	/* Wrapper for older sendToGroups.
-	 * Takes care of 'psuedo-groups' like <<triggerer>>, <<server>>, and <<everyone>>,
-	 * then hands the rest off to the original, two-argument sendToGroups */
+	/* Takes care of 'psuedo-groups' like <<triggerer>>, <<server>>, and <<everyone>>,
+	 * then sends to the rest as normal */
 	public void sendToGroups (String [] sendToGroups, String message, Player triggerer) {
 		ArrayList <String> sendToGroupsFiltered = new ArrayList<String>();
 		ArrayList <Player> sendToUs = new ArrayList<Player>();
-		boolean everyone = false;
+		boolean everyoneTag = false;
 		for (String group : sendToGroups){
 			if (group.equalsIgnoreCase("<<triggerer>>")) {
-				sendToPlayer(message, triggerer);
+				sendToUs.add(triggerer);
+			} else if (group.equalsIgnoreCase("<<everyone>>")){
+				sendToUs.clear();
+				sendToUs.addAll(MCServer.getPlayerList());
+				everyoneTag = true;
 			} else if (group.equalsIgnoreCase("<<server>>")) {
 				String [] replace = {"<<recipient>>", "<<recipient-ip>>", "<<recipient-color>>", "<<recipient-balance>>"};
 				String [] with    = {"server", "", "", ""};
 				message = "[rMotD] " + parseMessage(message, replace, with);
 				for(String send : message.split("\n"))
 					log.info(send);
-			} else if (group.equalsIgnoreCase("<<everyone>>")){
-				for (Player messageMe : etc.getServer().getPlayerList()){
-					sendToPlayer(message, messageMe);
-				}
-				everyone = true;
 			} else {
 				sendToGroupsFiltered.add(group);
 			}
 		}
-		if (!everyone && !sendToGroupsFiltered.isEmpty()) {
-			sendToGroups(sendToGroupsFiltered.toArray(new String[sendToGroupsFiltered.size()]), message);
+		if (!everyoneTag){
+			for (Player sendToMe : constructPlayerList(sendToGroups, sendToUs)){
+				sendToPlayer(message, sendToMe);
+			}
 		}
 	}
 
 	/* Sends the message string to each group named in sendToGroups */
 	public void sendToGroups (String [] sendToGroups, String message) {
-		for (Player messageMe: etc.getServer().getPlayerList()){
-			boolean flag = false;
-			for(String amIHere : sendToGroups) {
-				if (messageMe.isInGroup(amIHere) || (messageMe.hasNoGroups() && amIHere == defaultGroup)){
-					flag = true;
-					break;
-				}
-			}
-			if (flag == true) {
-				sendToPlayer(message, messageMe);
-			}
+		for (Player sendToMe :  constructPlayerList(sendToGroups, new ArrayList<Player>())){
+			sendToPlayer(message, sendToMe);
 		}
 		return;
+	}
+	
+	public ArrayList<Player> constructPlayerList(String [] inTheseGroups, ArrayList<Player> List){
+		for (Player addMe: MCServer.getPlayerList()){
+			if (!List.contains(addMe)){
+				if (addMe.hasNoGroups()) {
+					for (String isDefault : inTheseGroups) {
+						if (isDefault.equalsIgnoreCase(defaultGroup)) {
+							List.add(addMe);
+						}
+						break;
+					}
+				} else {
+					search:
+					for(String memberGroup : addMe.getGroups()) {
+						for(String amIHere : inTheseGroups){
+							if (memberGroup.equalsIgnoreCase(amIHere)){
+								List.add(addMe);
+								break search;
+							}
+						}
+					}
+				}
+			}
+		}
+		return List;
 	}
 	
 	public void sendToPlayer(String message, Player recipient) {
@@ -230,7 +248,8 @@ public class rMotD extends Plugin {
 	        	if ((iShouldExist = etc.getDataSource().getGroup(split[1])) != null) {
 		        	String tag =  "<" + player.getColor() + player.getName() + Colors.White + " to §" + iShouldExist.Prefix.charAt(0) + iShouldExist.Name + Colors.White + "> ";
 		        	String message = tag + etc.combineSplit(2, split, " ");
-		        	sendToGroup(split[1], message);
+		        	String [] functionParam = {split[1], player.getName()};
+		        	sendToGroups(functionParam, message,player);
 	        	} else {
 	        		player.sendMessage(Colors.Red + "Invalid group name!");
 	        	}
