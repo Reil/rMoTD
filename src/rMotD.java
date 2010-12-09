@@ -19,6 +19,7 @@ public class rMotD extends Plugin {
 	public void initialize(){
 		etc.getLoader().addListener(PluginLoader.Hook.LOGIN  , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.COMMAND, listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.SERVERCOMMAND, listener, this, PluginListener.Priority.MEDIUM);
 		defaultGroup = etc.getDataSource().getDefaultGroup().Name;
 		if (iData.iExist()){
 			data = new iData();
@@ -36,7 +37,6 @@ public class rMotD extends Plugin {
 		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.BAN        , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.LOGINCHECK , listener, this, PluginListener.Priority.MEDIUM);
-		
 		etc.getInstance().addCommand("/grouptell", "Tell members of a group something.");
 		log.info("[rMotD] Loaded: Version " + versionNumber);
 	}
@@ -134,6 +134,7 @@ public class rMotD extends Plugin {
 	 * then hands the rest off to the original, two-argument sendToGroups */
 	public void sendToGroups (String [] sendToGroups, String message, Player triggerer) {
 		ArrayList <String> sendToGroupsFiltered = new ArrayList<String>();
+		ArrayList <Player> sendToUs = new ArrayList<Player>();
 		boolean everyone = false;
 		for (String group : sendToGroups){
 			if (group.equalsIgnoreCase("<<triggerer>>")) {
@@ -234,10 +235,25 @@ public class rMotD extends Plugin {
 	        		player.sendMessage(Colors.Red + "Invalid group name!");
 	        	}
 	        	return true;
-	        }
-	        
-	        
+	        }    
 			return false; 
+		}
+		public boolean onConsoleCommand(String[] split) {
+			if (split[0].equalsIgnoreCase("grouptell")) {
+				Group iShouldExist;
+	        	if ((iShouldExist = etc.getDataSource().getGroup(split[1])) != null) {
+		        	String tag =  "<§dServer " + Colors.White + "to §" + iShouldExist.Prefix.charAt(0) + iShouldExist.Name + Colors.White + "> ";
+		        	String message = tag + etc.combineSplit(2, split, " ");
+		        	sendToGroup(split[1], message);
+		        	log.info("[rMotd to " + iShouldExist.Name + "] " + etc.combineSplit(2, split, " "));
+	        	} else {
+	        		log.info("[rMotD] Invalid group name!");
+	        	}
+	        	return true;
+			}
+			
+			
+			return false;
 		}
 	}
 }
