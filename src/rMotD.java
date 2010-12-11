@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,7 +38,6 @@ public class rMotD extends Plugin {
 		// Regex: ^([A-Za-z0-9,]+):([A-Za-z0-9,]*:([A-Za-z0-9,]*disconnect([A-Za-z0-9,]*)
 		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.BAN        , listener, this, PluginListener.Priority.MEDIUM);
-		etc.getLoader().addListener(PluginLoader.Hook.LOGINCHECK , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getInstance().addCommand("/grouptell", "Tell members of a group something.");
 		log.info("[rMotD] Loaded: Version " + versionNumber);
 	}
@@ -105,9 +105,9 @@ public class rMotD extends Plugin {
 						}
 						String [] replace = {"@"	, "<<triggerer>>"          , "<<triggerer-ip>>"    , "<<triggerer-color>>"   , "<<triggerer-balance>>"  , "<<player-list>>"};
 						String [] with    = {"\n"	, triggerMessage.getName() , triggerMessage.getIP(),triggerMessage.getColor(), Integer.toString(balance), playerList};					
-						message = parseMessage(message, replace, with);
+						message = MessageParser.parseMessage(message, replace, with);
 						if (eventToReplace.length > 0)
-							message = parseMessage(message, eventToReplace, eventReplaceWith);
+							message = MessageParser.parseMessage(message, eventToReplace, eventReplaceWith);
 						/* Tag replacement end! */
 						
 						sendMessage(message, triggerMessage, split[0]);
@@ -134,19 +134,21 @@ public class rMotD extends Plugin {
 	 * then sends to the rest as normal */
 	public void sendToGroups (String [] sendToGroups, String message, Player triggerer) {
 		ArrayList <String> sendToGroupsFiltered = new ArrayList<String>();
-		ArrayList <Player> sendToUs = new ArrayList<Player>();
+		Hashtable <Player, Player> sendToUs = new Hashtable<Player, Player>();
 		boolean everyoneTag = false;
 		for (String group : sendToGroups){
 			if (group.equalsIgnoreCase("<<triggerer>>")) {
-				sendToUs.add(triggerer);
+				sendToUs.put(triggerer, triggerer);
 			} else if (group.equalsIgnoreCase("<<everyone>>")){
 				sendToUs.clear();
-				sendToUs.addAll(MCServer.getPlayerList());
+				for (Player putMe : MCServer.getPlayerList()) {
+					sendToUs.put(putMe, putMe);
+				}
 				everyoneTag = true;
 			} else if (group.equalsIgnoreCase("<<server>>")) {
 				String [] replace = {"<<recipient>>", "<<recipient-ip>>", "<<recipient-color>>", "<<recipient-balance>>"};
 				String [] with    = {"server", "", "", ""};
-				message = "[rMotD] " + parseMessage(message, replace, with);
+				message = "[rMotD] " + MessageParser.parseMessage(message, replace, with);
 				for(String send : message.split("\n"))
 					log.info(send);
 			} else {
@@ -154,7 +156,7 @@ public class rMotD extends Plugin {
 			}
 		}
 		if (!everyoneTag){
-			for (Player sendToMe : constructPlayerList(sendToGroups, sendToUs)){
+			for (Player sendToMe : constructPlayerList(sendToGroups, sendToUs).values()){
 				sendToPlayer(message, sendToMe);
 			}
 		}
@@ -162,28 +164,29 @@ public class rMotD extends Plugin {
 
 	/* Sends the message string to each group named in sendToGroups */
 	public void sendToGroups (String [] sendToGroups, String message) {
-		for (Player sendToMe :  constructPlayerList(sendToGroups, new ArrayList<Player>())){
+		for (Player sendToMe :  constructPlayerList(sendToGroups, new Hashtable<Player,Player>()).values()){
 			sendToPlayer(message, sendToMe);
 		}
 		return;
 	}
 	
-	public ArrayList<Player> constructPlayerList(String [] inTheseGroups, ArrayList<Player> List){
+	public Hashtable<Player, Player> constructPlayerList(String [] inTheseGroups, Hashtable<Player,Player> List){
 		for (Player addMe: MCServer.getPlayerList()){
 			if (!List.contains(addMe)){
 				if (addMe.hasNoGroups()) {
+					search:
 					for (String isDefault : inTheseGroups) {
 						if (isDefault.equalsIgnoreCase(defaultGroup)) {
-							List.add(addMe);
+							List.put(addMe,addMe);
 						}
-						break;
+						break search;
 					}
 				} else {
 					search:
 					for(String memberGroup : addMe.getGroups()) {
 						for(String amIHere : inTheseGroups){
 							if (memberGroup.equalsIgnoreCase(amIHere)){
-								List.add(addMe);
+								List.put(addMe, addMe);
 								break search;
 							}
 						}
@@ -201,18 +204,10 @@ public class rMotD extends Plugin {
 		}
 		String [] replace = {"<<recipient>>"    , "<<recipient-ip>>" , "<<recipient-color>>", "<<recipient-balance>>"};
 		String [] with    = {recipient.getName(), recipient.getIP()  , recipient.getColor() , Integer.toString(balance)};
-		message = parseMessage(message, replace, with);
+		message = MessageParser.parseMessage(message, replace, with);
 		/* Tag replacement end. */
 		for(String send : message.split("\n"))
 			recipient.sendMessage(send);
-	}
-	
-	public String parseMessage(String message, String [] replace, String[] with){
-		String parsed = message;
-		for(int i = 0; i < replace.length; i++) {
-			parsed = parsed.replaceAll(replace[i], with[i]);
-		}
-		return parsed;
 	}
 	
 	
@@ -257,6 +252,7 @@ public class rMotD extends Plugin {
 	        }    
 			return false; 
 		}
+		
 		public boolean onConsoleCommand(String[] split) {
 			if (split[0].equalsIgnoreCase("grouptell")) {
 				Group iShouldExist;
