@@ -151,7 +151,11 @@ public class rMotD extends Plugin {
 				message = "[rMotD] " + MessageParser.parseMessage(message, replace, with);
 				for(String send : message.split("\n"))
 					log.info(send);
-			} else {
+			} else if (group.equalsIgnoreCase("<<command>>")) {
+				String command = message.substring(message.indexOf('/'),message.length() -1);
+				triggerer.command(command);
+			}
+			else {
 				sendToGroupsFiltered.add(group);
 			}
 		}
