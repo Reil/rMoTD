@@ -11,7 +11,7 @@ public class rMotD extends Plugin {
 	Logger log = Logger.getLogger("Minecraft");
 	Server MCServer =etc.getServer();
 	String defaultGroup;
-	String versionNumber = "1.3"; 
+	String versionNumber = "1.4"; 
 	public iData data;
 	
 	public rMotD () {
