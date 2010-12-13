@@ -11,7 +11,7 @@ public class rMotD extends Plugin {
 	Logger log = Logger.getLogger("Minecraft");
 	Server MCServer =etc.getServer();
 	String defaultGroup;
-	String versionNumber = "1.4"; 
+	String versionNumber = "1.4.5"; 
 	public iData data;
 	
 	public rMotD () {
@@ -39,6 +39,7 @@ public class rMotD extends Plugin {
 		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.BAN        , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getInstance().addCommand("/grouptell", "Tell members of a group something.");
+		etc.getInstance().addCommand("/rmotd", "Displays your Message of the Day");
 		log.info("[rMotD] Loaded: Version " + versionNumber);
 	}
 	public void disable(){
@@ -254,6 +255,11 @@ public class rMotD extends Plugin {
 	        	}
 	        	return true;
 	        }    
+	        else if (split[0].equalsIgnoreCase("/rmotd")) {
+				triggerMessagesWithOption(player, "onrmotd");
+				return true;
+			}
+			
 			return false; 
 		}
 		
@@ -270,8 +276,6 @@ public class rMotD extends Plugin {
 	        	}
 	        	return true;
 			}
-			
-			
 			return false;
 		}
 	}
