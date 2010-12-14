@@ -153,7 +153,7 @@ public class rMotD extends Plugin {
 				for(String send : message.split("\n"))
 					log.info(send);
 			} else if (group.equalsIgnoreCase("<<command>>")) {
-				String command = message.substring(message.indexOf('/'),message.length() -1);
+				String command = message.substring(message.indexOf('/'));
 				triggerer.command(command);
 			}
 			else {

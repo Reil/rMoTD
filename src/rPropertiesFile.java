@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class rPropertiesFile {
@@ -89,6 +90,12 @@ public class rPropertiesFile {
 		}
 		String[] returnArray = new String[returnMe.size()];
 		return returnMe.toArray(returnArray);
+	}
+	
+	String [] getKeys() {
+		Set<String> keys = Properties.keySet();
+		String [] keyArray = new String[keys.size()];
+		return keys.toArray(keyArray);
 	}
 	
 	boolean	keyExists(java.lang.String key) {
