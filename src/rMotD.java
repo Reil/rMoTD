@@ -36,8 +36,9 @@ public class rMotD extends Plugin {
 		
 		/* TODO (Efficiency): Go through each message, see if any messages actually need these listeners. */
 		// Regex: ^([A-Za-z0-9,]+):([A-Za-z0-9,]*:([A-Za-z0-9,]*disconnect([A-Za-z0-9,]*)
-		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT , listener, this, PluginListener.Priority.MEDIUM);
-		etc.getLoader().addListener(PluginLoader.Hook.BAN        , listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT   , listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.BAN          , listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.HEALTH_CHANGE, listener, this, PluginListener.Priority.MEDIUM);
 		etc.getInstance().addCommand("/grouptell", "Tell members of a group something.");
 		etc.getInstance().addCommand("/rmotd", "Displays your Message of the Day");
 		log.info("[rMotD] Loaded: Version " + versionNumber);
@@ -217,12 +218,6 @@ public class rMotD extends Plugin {
 	
 	
 	public class rMotDListener extends PluginListener {
-		/* Checks for any messages that the player's group memberships may trigger.
-		 * Parses the message line into:
-		 *  - groups to send it to (or just the player)
-		 *  - options
-		 *  - and the message.
-		 * Sends the message on its merry way using sendToGroups.*/
 		public void onLogin(Player triggerMessage){
 			triggerMessagesWithOption(triggerMessage, "onlogin");
 			return;
@@ -233,17 +228,17 @@ public class rMotD extends Plugin {
 			return;
 		}
 		
-		public void onBan(Player mod, Player triggerMessage, java.lang.String reason) {
-			String [] replaceThese = {"<<ban-reason>>", "<<ban-setter>>", "<<ban-recipient>>"     };
-			String [] withThese =    {reason          , mod.getName()   , triggerMessage.getName()};
-			triggerMessagesWithOption(triggerMessage, "onban", replaceThese, withThese);
-		}
-		
 		public boolean onHealthChange(Player triggerMessage, int oldValue, int newValue){
 			if (newValue <= 0) {
 				triggerMessagesWithOption(triggerMessage, "ondeath");
 			}
 			return false;
+		}
+		
+		public void onBan(Player mod, Player triggerMessage, java.lang.String reason) {
+			String [] replaceThese = {"<<ban-reason>>", "<<ban-setter>>", "<<ban-recipient>>"     };
+			String [] withThese =    {reason          , mod.getName()   , triggerMessage.getName()};
+			triggerMessagesWithOption(triggerMessage, "onban", replaceThese, withThese);
 		}
 		
 		public boolean onCommand(Player player, String[] split){
