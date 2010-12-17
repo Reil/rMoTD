@@ -1,5 +1,5 @@
 name = rMotD
-version = 1.4.5
+version = 1.5
 url = https://github.com/Reil/rMoTD/raw/master/rMotD.updatr
 file = https://github.com/Reil/rMoTD/raw/master/rMotD.jar
-notes = rMotD is awesome!
+notes = Added onDeath trigger

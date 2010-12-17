@@ -11,7 +11,7 @@ public class rMotD extends Plugin {
 	Logger log = Logger.getLogger("Minecraft");
 	Server MCServer =etc.getServer();
 	String defaultGroup;
-	String versionNumber = "1.4.5"; 
+	String versionNumber = "1.5"; 
 	public iData data;
 	
 	public rMotD () {
@@ -237,6 +237,13 @@ public class rMotD extends Plugin {
 			String [] replaceThese = {"<<ban-reason>>", "<<ban-setter>>", "<<ban-recipient>>"     };
 			String [] withThese =    {reason          , mod.getName()   , triggerMessage.getName()};
 			triggerMessagesWithOption(triggerMessage, "onban", replaceThese, withThese);
+		}
+		
+		public boolean onHealthChange(Player triggerMessage, int oldValue, int newValue){
+			if (newValue <= 0) {
+				triggerMessagesWithOption(triggerMessage, "ondeath");
+			}
+			return false;
 		}
 		
 		public boolean onCommand(Player player, String[] split){
