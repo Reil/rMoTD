@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 
 public class rMotD extends Plugin {
 	public rPropertiesFile Messages;
-	PluginListener listener = new rMotDListener();
+	PluginListener listener = new rMotDListener(this);
 	Logger log = Logger.getLogger("Minecraft");
 	Server MCServer =etc.getServer();
 	String defaultGroup;
@@ -140,7 +140,8 @@ public class rMotD extends Plugin {
 		boolean everyoneTag = false;
 		for (String group : sendToGroups){
 			if (group.equalsIgnoreCase("<<triggerer>>")) {
-				sendToUs.put(triggerer, triggerer);
+				if (triggerer != null)
+					sendToUs.put(triggerer, triggerer);
 			} else if (group.equalsIgnoreCase("<<everyone>>")){
 				sendToUs.clear();
 				for (Player putMe : MCServer.getPlayerList()) {
@@ -154,8 +155,10 @@ public class rMotD extends Plugin {
 				for(String send : message.split("\n"))
 					log.info(send);
 			} else if (group.equalsIgnoreCase("<<command>>")) {
-				String command = message.substring(message.indexOf('/'));
-				triggerer.command(command);
+				if (triggerer != null) {
+					String command = message.substring(message.indexOf('/'));
+					triggerer.command(command);
+				}
 			}
 			else {
 				sendToGroupsFiltered.add(group);
@@ -214,71 +217,5 @@ public class rMotD extends Plugin {
 		/* Tag replacement end. */
 		for(String send : message.split("\n"))
 			recipient.sendMessage(send);
-	}
-	
-	
-	public class rMotDListener extends PluginListener {
-		public void onLogin(Player triggerMessage){
-			triggerMessagesWithOption(triggerMessage, "onlogin");
-			return;
-		}
-		
-		public void onDisconnect(Player triggerMessage){
-			triggerMessagesWithOption(triggerMessage, "ondisconnect");
-			return;
-		}
-		
-		public boolean onHealthChange(Player triggerMessage, int oldValue, int newValue){
-			if (newValue <= 0) {
-				triggerMessagesWithOption(triggerMessage, "ondeath");
-			}
-			return false;
-		}
-		
-		public void onBan(Player mod, Player triggerMessage, java.lang.String reason) {
-			String [] replaceThese = {"<<ban-reason>>", "<<ban-setter>>", "<<ban-recipient>>"     };
-			String [] withThese =    {reason          , mod.getName()   , triggerMessage.getName()};
-			triggerMessagesWithOption(triggerMessage, "onban", replaceThese, withThese);
-		}
-		
-		public boolean onCommand(Player player, String[] split){
-			if (!player.canUseCommand(split[0]))
-	            return false;
-	        
-	        if (split[0].equalsIgnoreCase("/grouptell")){
-	        	Group iShouldExist;
-	        	if ((iShouldExist = etc.getDataSource().getGroup(split[1])) != null) {
-		        	String tag =  "<" + player.getColor() + player.getName() + Colors.White + " to §" + iShouldExist.Prefix.charAt(0) + iShouldExist.Name + Colors.White + "> ";
-		        	String message = tag + etc.combineSplit(2, split, " ");
-		        	String [] functionParam = {split[1], player.getName()};
-		        	sendToGroups(functionParam, message,player);
-	        	} else {
-	        		player.sendMessage(Colors.Red + "Invalid group name!");
-	        	}
-	        	return true;
-	        }    
-	        else if (split[0].equalsIgnoreCase("/rmotd")) {
-				triggerMessagesWithOption(player, "onrmotd");
-				return true;
-			}
-			
-			return false; 
-		}
-		
-		public boolean onConsoleCommand(String[] split) {
-			if (split[0].equalsIgnoreCase("grouptell")) {
-				Group iShouldExist;
-	        	if ((iShouldExist = etc.getDataSource().getGroup(split[1])) != null) {
-		        	String tag =  "<§dServer " + Colors.White + "to §" + iShouldExist.Prefix.charAt(0) + iShouldExist.Name + Colors.White + "> ";
-		        	String message = tag + etc.combineSplit(2, split, " ");
-		        	sendToGroup(split[1], message);
-		        	log.info("[rMotd to " + iShouldExist.Name + "] " + etc.combineSplit(2, split, " "));
-	        	} else {
-	        		log.info("[rMotD] Invalid group name!");
-	        	}
-	        	return true;
-			}
-			return false;
-		}
 	}
 }
