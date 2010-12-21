@@ -28,7 +28,7 @@ public class rMotDTimer extends TimerTask{
 		} else {
 			// Error?
 		}
-		this.delay = new Integer(options[1]) * 60;
+		this.delay = new Integer(options[1]) * 1000;
 	}
 	public rMotDTimer() {
 	}
@@ -65,10 +65,12 @@ public class rMotDTimer extends TimerTask{
 		
 		// Find next sequence
 		if (progression == random) {
-			int prospectiveNext = nextMessage;
-			while (prospectiveNext == nextMessage)
-				prospectiveNext = generator.nextInt(Messages.length);
-			nextMessage = prospectiveNext;
+			if (Messages.length != 1) {
+				int prospectiveNext = nextMessage;
+				while (prospectiveNext == nextMessage)
+					prospectiveNext = generator.nextInt(Messages.length);
+				nextMessage = prospectiveNext;
+			} else nextMessage = ( nextMessage + 1 ) % Messages.length;
 		}
 		else if (progression == sequential)
 			nextMessage = ( nextMessage + 1 ) % Messages.length;
