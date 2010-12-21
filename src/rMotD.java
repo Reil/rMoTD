@@ -13,7 +13,7 @@ public class rMotD extends Plugin {
 	Server MCServer =etc.getServer();
 	Timer scheduler;
 	String defaultGroup;
-	String versionNumber = "1.5"; 
+	String versionNumber = "1.6"; 
 	public iData data;
 	
 	public rMotD () {
@@ -72,6 +72,8 @@ public class rMotD extends Plugin {
 	public void disable(){
 		Messages.save();
 		etc.getInstance().removeCommand("/grouptell");
+		scheduler.cancel();
+		scheduler.purge();
 		log.info("[rMotD] Disabled!");
 	} 
 	
@@ -163,17 +165,16 @@ public class rMotD extends Plugin {
 	public void sendToGroups (String [] sendToGroups, String message, Player triggerer) {
 		ArrayList <String> sendToGroupsFiltered = new ArrayList<String>();
 		Hashtable <Player, Player> sendToUs = new Hashtable<Player, Player>();
-		boolean everyoneTag = false;
 		for (String group : sendToGroups){
 			if (group.equalsIgnoreCase("<<triggerer>>")) {
-				if (triggerer != null)
+				if (triggerer != null){
 					sendToUs.put(triggerer, triggerer);
+				}
 			} else if (group.equalsIgnoreCase("<<everyone>>")){
 				sendToUs.clear();
 				for (Player putMe : MCServer.getPlayerList()) {
 					sendToUs.put(putMe, putMe);
 				}
-				everyoneTag = true;
 			} else if (group.equalsIgnoreCase("<<server>>")) {
 				String [] replace = {"<<recipient>>", "<<recipient-ip>>", "<<recipient-color>>", "<<recipient-balance>>"};
 				String [] with    = {"server", "", "", ""};
@@ -190,10 +191,8 @@ public class rMotD extends Plugin {
 				sendToGroupsFiltered.add(group);
 			}
 		}
-		if (!everyoneTag){
-			for (Player sendToMe : constructPlayerList(sendToGroups, sendToUs).values()){
-				sendToPlayer(message, sendToMe);
-			}
+		for (Player sendToMe : constructPlayerList(sendToGroupsFiltered.toArray(new String[sendToGroupsFiltered.size()]), sendToUs).values()){
+			sendToPlayer(message, sendToMe);
 		}
 	}
 

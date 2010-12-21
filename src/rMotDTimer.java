@@ -16,16 +16,33 @@ public class rMotDTimer extends TimerTask{
 	public rMotDTimer(rMotD rMotD, Timer timer, String [] Messages){
 		this.Messages = Messages;
 		this.rMotD = rMotD;
-		if (progression == random){
-			this.generator = new Random();
-			this.nextMessage =  generator.nextInt(Messages.length);
-		} else if (progression != sequential){
-			// Uh, throw an error here or something
-		}
+		this.timer = timer;
+		this.generator = new Random();
 		String [] split =  Messages[0].split(":");
 		String [] options = split[1].split(",");
 		this.progression = new Integer(options[2]);
-		this.delay = new Integer(options[1]);
+		if (progression == random){
+			this.nextMessage =  generator.nextInt(Messages.length);
+		} else if (progression == sequential){
+			this.nextMessage = 1;
+		} else {
+			// Error?
+		}
+		this.delay = new Integer(options[1]) * 60;
+	}
+	public rMotDTimer() {
+	}
+	
+	public rMotDTimer clone(){
+		rMotDTimer clone = new rMotDTimer();
+		clone.rMotD = this.rMotD;
+		clone.Messages = this.Messages;
+		clone.nextMessage = this.nextMessage;
+		clone.generator = this.generator;
+		clone.timer = this.timer;
+		clone.delay = this.delay;
+		clone.progression = this.progression;
+		return clone;
 	}
 	
 	public void run() {
@@ -35,7 +52,7 @@ public class rMotDTimer extends TimerTask{
 		String [] options =  split[1].split(",");
 		String Groups = split[0];
 		try{
-			delay = new Integer(options[1]);
+			delay = new Integer(options[1]) * 1000;
 		} catch (NumberFormatException blargh){
 			rMotD.log.info("[rMotD] Invalid timer interval!");
 			return;
@@ -47,8 +64,12 @@ public class rMotDTimer extends TimerTask{
 		rMotD.sendToGroups(sendToGroups, message, null);
 		
 		// Find next sequence
-		if (progression == random)
-			nextMessage = generator.nextInt(Messages.length);
+		if (progression == random) {
+			int prospectiveNext = nextMessage;
+			while (prospectiveNext == nextMessage)
+				prospectiveNext = generator.nextInt(Messages.length);
+			nextMessage = prospectiveNext;
+		}
 		else if (progression == sequential)
 			nextMessage = ( nextMessage + 1 ) % Messages.length;
 		else {
@@ -57,7 +78,8 @@ public class rMotDTimer extends TimerTask{
 		
 		// Shit bricks
 		// Schedule next run
-		timer.schedule(this, delay);
+		rMotDTimer clone = (rMotDTimer) this.clone();
+		timer.schedule(clone, delay);
 	}
 
 }
