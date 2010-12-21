@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Timer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -10,6 +11,7 @@ public class rMotD extends Plugin {
 	PluginListener listener = new rMotDListener(this);
 	Logger log = Logger.getLogger("Minecraft");
 	Server MCServer =etc.getServer();
+	Timer scheduler;
 	String defaultGroup;
 	String versionNumber = "1.5"; 
 	public iData data;
@@ -34,6 +36,30 @@ public class rMotD extends Plugin {
 			log.log(Level.SEVERE, "[rMotD]: Exception while loading properties file.", e);
 		}
 		
+		/* TODO: Go through all timer messages, create rMotDTimers for all of them. */
+		if (Messages.keyExists("<<timer>>")){
+			Hashtable<String, ArrayList<String>> timerLists = new Hashtable <String, ArrayList<String>>();
+			scheduler = new Timer();
+			// Sort all the timer messages into lists 
+			for (String sortMe : Messages.getStrings("<<timer>>")){
+				String [] split =  sortMe.split(":");
+				String [] options =  split[1].split(",");
+				String sortMeList = options[0];
+				if(!timerLists.containsKey(sortMeList)){
+					timerLists.put(sortMeList, new ArrayList<String>());
+				}
+				timerLists.get(sortMeList).add(sortMe);
+			}
+			// Make an rMotDTimer for each list!
+			for (String key : timerLists.keySet().toArray(new String[timerLists.keySet().size()])){
+				// rMotDTimer(rMotD rMotD, Timer timer, String [] Messages)
+				ArrayList<String> sendTheseAList = timerLists.get(key);
+				String [] sendThese = sendTheseAList.toArray(new String[sendTheseAList.size()]);
+				rMotDTimer scheduleMe = new rMotDTimer(this, scheduler, sendThese); 
+				scheduler.schedule(scheduleMe, scheduleMe.delay);
+			}
+		}
+
 		/* TODO (Efficiency): Go through each message, see if any messages actually need these listeners. */
 		// Regex: ^([A-Za-z0-9,]+):([A-Za-z0-9,]*:([A-Za-z0-9,]*disconnect([A-Za-z0-9,]*)
 		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT   , listener, this, PluginListener.Priority.MEDIUM);
