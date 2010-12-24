@@ -13,7 +13,7 @@ public class rMotD extends Plugin {
 	Server MCServer =etc.getServer();
 	Timer scheduler;
 	String defaultGroup;
-	String versionNumber = "1.6"; 
+	String versionNumber = "1.7"; 
 	public iData data;
 	
 	public rMotD () {
@@ -36,7 +36,7 @@ public class rMotD extends Plugin {
 			log.log(Level.SEVERE, "[rMotD]: Exception while loading properties file.", e);
 		}
 		
-		/* TODO: Go through all timer messages, create rMotDTimers for all of them. */
+		/* Go through all timer messages, create rMotDTimers for each unique list */
 		if (Messages.keyExists("<<timer>>")){
 			Hashtable<String, ArrayList<String>> timerLists = new Hashtable <String, ArrayList<String>>();
 			scheduler = new Timer();
@@ -95,13 +95,15 @@ public class rMotD extends Plugin {
 	
 	public void triggerMessagesWithOption(Player triggerMessage, String option, String[] eventToReplace, String[] eventReplaceWith){
 		ArrayList<String>groupArray = new ArrayList<String>();
-		/* Obtain group list */
+		/* Obtain triggerer's group list */
 		if (triggerMessage.hasNoGroups()){
 			groupArray.add(defaultGroup);
 		} else {
 			groupArray.addAll(Arrays.asList(triggerMessage.getGroups()));
 		}
-		/* Obtain player list */
+		groupArray.add("<<everyone>>");
+		
+		/* Obtain list of online players */
 		String playerList = new String();
 		List<Player> players = MCServer.getPlayerList();
 		if (players.size() == 1)
@@ -112,13 +114,14 @@ public class rMotD extends Plugin {
 			}
 		}
 		
-		groupArray.add("<<everyone>>");
+		/* Check for messages triggered by each group the player is a member of. */
 		for (String groupName : groupArray){
 			if (Messages.keyExists(groupName)){
 				for (String sendToGroups_Message : Messages.getStrings(groupName)){
 					String [] split =  sendToGroups_Message.split(":");
 					String [] options =  split[1].split(",");
 					boolean hookValid = false;
+					
 					if (split[1].isEmpty() && option.equalsIgnoreCase("onlogin")){
 						hookValid = true;
 					} else for (int i = 0; i <options.length && hookValid == false; i++){
@@ -178,9 +181,14 @@ public class rMotD extends Plugin {
 			} else if (group.equalsIgnoreCase("<<server>>")) {
 				String [] replace = {"<<recipient>>", "<<recipient-ip>>", "<<recipient-color>>", "<<recipient-balance>>"};
 				String [] with    = {"server", "", "", ""};
-				message = "[rMotD] " + MessageParser.parseMessage(message, replace, with);
-				for(String send : message.split("\n"))
+				String serverMessage = "[rMotD] " + MessageParser.parseMessage(message, replace, with);
+				for(String send : serverMessage.split("\n"))
 					log.info(send);
+			} else if (group.equalsIgnoreCase("<<twitter>>")){
+				String [] replace = {"<<recipient>>", "<<recipient-ip>>", "<<recipient-color>>", "<<recipient-balance>>"};
+				String [] with    = {"Twitter", "", "", ""};
+				String twitterMessage = MessageParser.parseMessage(message, replace, with);
+				etc.getLoader().callCustomHook("tweet", new Object[] {twitterMessage});
 			} else if (group.equalsIgnoreCase("<<command>>")) {
 				if (triggerer != null) {
 					String command = message.substring(message.indexOf('/'));

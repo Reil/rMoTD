@@ -110,7 +110,7 @@ public class rPropertiesFile {
         reader = new BufferedReader(new FileReader(fileName));
         String line;
         while ((line = reader.readLine()) != null) {
-        	if (line.startsWith("#")) {
+        	if (line.startsWith("#")|| line.isEmpty() || line.startsWith("\n")) {
         		
         	}
         	else {
