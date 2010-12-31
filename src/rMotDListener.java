@@ -40,6 +40,7 @@ public class rMotDListener extends PluginListener {
             return false;
 		
 		this.rMotD.triggerMessagesWithOption(player, "oncommand:" + split[0]);
+		this.rMotD.triggerMessagesWithOption(player, "oncommand|" + split[0]);
         
         if (split[0].equalsIgnoreCase("/grouptell")){
         	Group iShouldExist;

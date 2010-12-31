@@ -1,5 +1,5 @@
 name = rMotD
-version = 1.7
+version = 1.8
 url = https://github.com/Reil/rMoTD/raw/master/rMotD.updatr
 file = https://github.com/Reil/rMoTD/raw/master/rMotD.jar
-notes = Added onDeath trigger
+notes = Now trigger/send to specific players!

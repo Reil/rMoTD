@@ -13,7 +13,7 @@ public class rMotD extends Plugin {
 	Server MCServer =etc.getServer();
 	Timer scheduler;
 	String defaultGroup;
-	String versionNumber = "1.7"; 
+	String versionNumber = "1.8"; 
 	public iData data;
 	
 	public rMotD () {
@@ -101,7 +101,7 @@ public class rMotD extends Plugin {
 		} else {
 			groupArray.addAll(Arrays.asList(triggerMessage.getGroups()));
 		}
-		groupArray.add("<<player:" + triggerMessage.getName() + ">>");
+		groupArray.add("<<player|" + triggerMessage.getName() + ">>");
 		groupArray.add("<<everyone>>");
 		
 		/* Obtain list of online players */
@@ -195,8 +195,13 @@ public class rMotD extends Plugin {
 					String command = message.substring(message.indexOf('/'));
 					triggerer.command(command);
 				}
-			}
-			else {
+			} else if (group.substring(0,9).equalsIgnoreCase("<<player|")){
+				String playerName = group.substring(9, group.length()-2);
+				log.info(playerName);
+				Player putMe = MCServer.getPlayer(playerName);
+				if (putMe != null)
+					sendToUs.put(putMe, putMe);
+			} else {
 				sendToGroupsFiltered.add(group);
 			}
 		}
