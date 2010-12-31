@@ -101,6 +101,7 @@ public class rMotD extends Plugin {
 		} else {
 			groupArray.addAll(Arrays.asList(triggerMessage.getGroups()));
 		}
+		groupArray.add("<<player:" + triggerMessage.getName() + ">>");
 		groupArray.add("<<everyone>>");
 		
 		/* Obtain list of online players */
