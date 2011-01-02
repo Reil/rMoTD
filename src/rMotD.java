@@ -74,7 +74,7 @@ public class rMotD extends Plugin {
 		Messages.save();
 		etc.getInstance().removeCommand("/grouptell");
 		etc.getInstance().removeCommand("/rmotd");
-		scheduler.cancel();
+		if (scheduler != null) scheduler.cancel();
 		log.info("[rMotD] Disabled!");
 	} 
 	
