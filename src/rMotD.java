@@ -13,7 +13,7 @@ public class rMotD extends Plugin {
 	Server MCServer =etc.getServer();
 	Timer scheduler;
 	String defaultGroup;
-	String versionNumber = "1.8"; 
+	String versionNumber = "1.8_1"; 
 	public iData data;
 	
 	public rMotD () {
