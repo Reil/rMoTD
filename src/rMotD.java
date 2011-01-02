@@ -13,7 +13,7 @@ public class rMotD extends Plugin {
 	Server MCServer =etc.getServer();
 	Timer scheduler;
 	String defaultGroup;
-	String versionNumber = "1.8_1"; 
+	String versionNumber = "1.8_2"; 
 	public iData data;
 	
 	public rMotD () {
@@ -73,9 +73,8 @@ public class rMotD extends Plugin {
 	public void disable(){
 		Messages.save();
 		etc.getInstance().removeCommand("/grouptell");
-		etc.getInstance().removeCommand("rmotd");
+		etc.getInstance().removeCommand("/rmotd");
 		scheduler.cancel();
-		scheduler.purge();
 		log.info("[rMotD] Disabled!");
 	} 
 	

@@ -1,8 +1,13 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -31,12 +36,54 @@ public class rPropertiesFile {
         } else {
             try {
             	file.createNewFile();
+            	Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "UTF8"));
+            	Date timestamp = new Date();
+            	writer.write("# Properties file generated on " + timestamp.toString());
+            	writer.close();
             } catch (IOException ex) {
             	log.severe("[rPropertiesFile] Unable to create file " + fileName + "!");
             }
         }
     }
 	
+	void load() throws IOException {
+		/* Go through, line by line. 
+		 * If the line starts with # or !, then save the line in list
+		 * If the line has an assignment, put the name here. */
+		Properties.clear();
+		BufferedReader reader;
+	    reader = new BufferedReader(new FileReader(fileName));
+	    String line;
+	    while ((line = reader.readLine()) != null) {
+	    	if (line.startsWith("#")|| line.isEmpty() || line.startsWith("\n") || line.startsWith("\r")) {
+	    		
+	    	}
+	    	else {
+	    		/* TODO: Error checking */
+	    		String [] split = line.split("=");
+	    		if (split.length >= 2){
+	        		String PropertySide = split[0];
+	        		String Value = etc.combineSplit(1, split, "=");
+	        		for (String Property : PropertySide.split(",")) {
+		        		if (Properties.containsKey(Property)){
+		        			Properties.get(Property).add(Value);
+		        		}
+		        		else {
+		        			ArrayList<String> newList = new ArrayList<String>();
+		        			newList.add(Value);
+		        			Properties.put(Property, newList);
+		        		}
+	        		}
+	    		}
+	    	}
+	    }
+	    reader.close();
+	}
+
+	void save(){
+		
+	}
+
 	boolean getBoolean(java.lang.String key) {
 		return true; 
 	}
@@ -100,42 +147,6 @@ public class rPropertiesFile {
 	
 	boolean	keyExists(java.lang.String key) {
 		return Properties.containsKey(key);
-	}
-	void load() throws IOException {
-		/* Go through, line by line. 
-		 * If the line starts with # or !, then save the line in list
-		 * If the line has an assignment, put the name here. */
-		Properties.clear();
-		BufferedReader reader;
-        reader = new BufferedReader(new FileReader(fileName));
-        String line;
-        while ((line = reader.readLine()) != null) {
-        	if (line.startsWith("#")|| line.isEmpty() || line.startsWith("\n") || line.startsWith("\r")) {
-        		
-        	}
-        	else {
-        		/* TODO: Error checking */
-        		String [] split = line.split("=");
-        		if (split.length >= 2){
-	        		String PropertySide = split[0];
-	        		String Value = etc.combineSplit(1, split, "=");
-	        		for (String Property : PropertySide.split(",")) {
-		        		if (Properties.containsKey(Property)){
-		        			Properties.get(Property).add(Value);
-		        		}
-		        		else {
-		        			ArrayList<String> newList = new ArrayList<String>();
-		        			newList.add(Value);
-		        			Properties.put(Property, newList);
-		        		}
-	        		}
-        		}
-        	}
-        }
-        reader.close();
-	}
-	void save(){
-		
 	}
 	void setBoolean(java.lang.String key, boolean value) {
 		
