@@ -116,16 +116,18 @@ public class rPropertiesFile {
         	else {
         		/* TODO: Error checking */
         		String [] split = line.split("=");
-        		String PropertySide = split[0];
-        		String Value = etc.combineSplit(1, split, "=");
-        		for (String Property : PropertySide.split(",")) {
-	        		if (Properties.containsKey(Property)){
-	        			Properties.get(Property).add(Value);
-	        		}
-	        		else {
-	        			ArrayList<String> newList = new ArrayList<String>();
-	        			newList.add(Value);
-	        			Properties.put(Property, newList);
+        		if (split.length >= 2){
+	        		String PropertySide = split[0];
+	        		String Value = etc.combineSplit(1, split, "=");
+	        		for (String Property : PropertySide.split(",")) {
+		        		if (Properties.containsKey(Property)){
+		        			Properties.get(Property).add(Value);
+		        		}
+		        		else {
+		        			ArrayList<String> newList = new ArrayList<String>();
+		        			newList.add(Value);
+		        			Properties.put(Property, newList);
+		        		}
 	        		}
         		}
         	}
