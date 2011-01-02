@@ -24,7 +24,8 @@ public class rMotD extends Plugin {
 		etc.getLoader().addListener(PluginLoader.Hook.LOGIN  , listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.COMMAND, listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.SERVERCOMMAND, listener, this, PluginListener.Priority.MEDIUM);
-		defaultGroup = etc.getDataSource().getDefaultGroup().Name;
+		if (etc.getDataSource().getDefaultGroup() != null)
+			defaultGroup = etc.getDataSource().getDefaultGroup().Name;
 		if (iData.iExist()){
 			data = new iData();
 		}
@@ -72,6 +73,7 @@ public class rMotD extends Plugin {
 	public void disable(){
 		Messages.save();
 		etc.getInstance().removeCommand("/grouptell");
+		etc.getInstance().removeCommand("rmotd");
 		scheduler.cancel();
 		scheduler.purge();
 		log.info("[rMotD] Disabled!");
